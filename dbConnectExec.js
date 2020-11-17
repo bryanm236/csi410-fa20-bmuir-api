@@ -1,10 +1,11 @@
 const sql = require('mssql')
+const bmuirConfig = require('./config.js')
 
 const config = {
-    user: 'bryanmuir98',
-    password: 'aliceinwonderland98$',
-    server: 'cobazsqlcis410.database.windows.net', // You can use 'localhost\\instance' to connect to named instance
-    database: 'bmuir',
+    user: bmuirConfig.DB.user,
+    password: bmuirConfig.DB.password,
+    server: bmuirConfig.DB.server, // You can use 'localhost\\instance' to connect to named instance
+    database: bmuirConfig.DB.database,
 }
 
 async function executeQuery(aQuery) {
