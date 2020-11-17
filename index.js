@@ -4,9 +4,26 @@ const jwt = require('jsonwebtoken')
 
 const db = require('./dbConnectExec.js')
 const config = require('./config.js')
-
+const auth = require('./middleware/authenticate.js')
 const app = express();
 app.use(express.json())
+
+
+
+app.post("/reviews", auth, (req,res)=>{
+    var DriverFK = req.body.DriverFK;
+    var summary = req.body.summary;
+    var rating = req.body.rating;
+
+    if(!DriverFK || !summary || !rating){
+        res.status(400).send("bad request")
+    
+    
+    }
+
+    res.send("here is your response")
+
+})
 
 
 app.get("/hi",(req,res)=>{
@@ -135,12 +152,12 @@ app.post("/CustomerT", async (req,res)=>{
 // app.put()
 // app.delete()
 
-app.get("/VehicleT", (req,res)=>{
+app.get("/DriverT", (req,res)=>{
     //get data from database
     db.executeQuery(`SELECT *
-    FROM VehicleT
-    LEFT JOIN DriverT
-    ON VehicleT.VehiclePK = DriverT.VehicleFK`)
+    FROM DriverT
+    LEFT JOIN VehicleT
+    ON DriverT.VehicleFK = VehicleT.VehiclePK`)
     .then((result)=>{
 
         res.status(200).send(result)
@@ -155,26 +172,26 @@ app.get("/VehicleT", (req,res)=>{
 
 })
 
-app.get("/VehicleT/:pk", (req, res)=> {
+app.get("/DriverT/:pk", (req, res)=> {
     var pk = req.params.pk
     // console.log("my PK:" , pk)
 
     var myQuery = `SELECT *
-    FROM VehicleT
-    LEFT JOIN DriverT
-    ON VehicleT.VehiclePK = DriverT.VehicleFK
-    WHERE VehiclePK = ${pk}`
+    FROM DriverT
+    LEFT JOIN VehicleT
+    ON DriverT.VehicleFK = VehicleT.VehiclePK
+    WHERE DriverPK = ${pk}`
 
     db.executeQuery(myQuery)
-        .then((vehicles)=> {
-            // console.log("Vehicles: ", vehicles)
+        .then((drivers)=> {
+            // console.log("Drivers: ", drivers)
 
-            if(vehicles[0]){
-                res.send(vehicles[0])
+            if(drivers[0]){
+                res.send(drivers[0])
             }else{res.status(404).send('bad request')}
         })
         .catch((err)=>{
-            console.log("Error in /VehicleT/pk", err)
+            console.log("Error in /DriverT/pk", err)
             res.status(500).send()
         })
 })
