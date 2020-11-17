@@ -1,7 +1,9 @@
 const express = require('express')
 const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 
 const db = require('./dbConnectExec.js')
+const config = require('./config.js')
 
 const app = express();
 app.use(express.json())
@@ -15,6 +17,79 @@ app.get("/hi",(req,res)=>{
 
 
 
+})
+
+app.post("/CustomerT/login", async (req,res)=>{
+
+    // console.log(req.body)
+
+    var Email = req.body.Email;
+    var Password = req.body.Password;
+
+    if(!Email || !Password){
+        return res.status(400).send('bad request')
+    }
+
+    //1. Check that user email exists in the database
+
+    var query = `SELECT *
+    FROM CustomerT
+    WHERE Email = '${Email}'`
+
+    let result;
+
+    try{
+        result = await db.executeQuery(query);
+    }catch(myError){
+        console.log('error in /CustomerT/login')
+        return res.status(500).send()
+    }
+
+    // console.log(result)
+
+    if(!result[0]){return res.status(400).send('Invalid user credentials')}
+
+
+    //2. Check that their password matches
+
+    let user = result[0]
+    // console.log(user)
+
+    if(!bcrypt.compareSync(Password,user.Password)){
+        console.log("invalid password");
+        return res.status(400).send("Invalid user credentials")
+    }
+
+    //3. Generate token
+
+    let token = jwt.sign({pk: user.CustomerPK}, config.JWT, {expiresIn: '60 minutes'} )
+
+    console.log(token)
+
+
+    //4. Save the token in database and send token and user information back to user
+
+    let setTokenQuery = `UPDATE CustomerT
+    SET Token = '${token}'
+    WHERE CustomerPK = ${user.CustomerPK}`
+
+    try{
+        await db.executeQuery(setTokenQuery)
+
+        res.status(200).send({
+            token: token,
+            user: {
+                FirstName: user.FirstName,
+                LastName: user.LastName,
+                Email: user.Email,
+                CustomerPK: user.CustomerPK
+            }
+        })
+    }
+    catch(myError){
+        console.log("error setting user token ", myError);
+        res.status(500).send()
+    }
 })
 
 app.post("/CustomerT", async (req,res)=>{
@@ -91,11 +166,11 @@ app.get("/VehicleT/:pk", (req, res)=> {
     WHERE VehiclePK = ${pk}`
 
     db.executeQuery(myQuery)
-        .then((drivers)=> {
-            // console.log("Drivers: ", drivers)
+        .then((vehicles)=> {
+            // console.log("Vehicles: ", vehicles)
 
-            if(drivers[0]){
-                res.send(drivers[0])
+            if(vehicles[0]){
+                res.send(vehicles[0])
             }else{res.status(404).send('bad request')}
         })
         .catch((err)=>{
