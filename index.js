@@ -4,27 +4,52 @@ const jwt = require('jsonwebtoken')
 
 const db = require('./dbConnectExec.js')
 const config = require('./config.js')
-const auth = require('./middleware/authenticate.js')
+const auth = require('./middleware/authenticate')
 const app = express();
 app.use(express.json())
 
 
 
-app.post("/reviews", auth, (req,res)=>{
-    var DriverFK = req.body.DriverFK;
-    var summary = req.body.summary;
-    var rating = req.body.rating;
+app.post("/rides", auth, async (req,res)=>{
 
-    if(!DriverFK || !summary || !rating){
-        res.status(400).send("bad request")
+    try{ var DriverFK = req.body.DriverFK;
+        var LocationTo = req.body.LocationTo;
+        var LocationFrom = req.body.LocationFrom;
+        var RideType = req.body.RideType
     
+        if(!DriverFK || !LocationTo || !LocationFrom || !RideType){
+            res.status(400).send("bad request")
+        }
+
+        LocationTo = LocationTo.replace("'","''")
+        LocationFrom = LocationFrom.replace("'","''")
+        RideType = LocationTo.replace("'","''")
+
+
+        // console.log("here is the Customer requesting a ride", req.contact)
+        // res.send("Driver is on the way...")
+    
+        let insertQuery = `INSERT INTO RideT(RideType, LocationTo, LocationFrom, DriverFK, CustomerFK)
+        OUTPUT inserted.RidePK, inserted.LocationTo,inserted.LocationFrom,inserted.DriverFK
+        VALUES('${RideType}','${LocationTo}','${LocationFrom}','${DriverFK}','${req.contact.CustomerPK}')`
+
+        let insertedRide = await db.executeQuery(insertQuery)
+
+        // console.log(insertedRide)
+        res.status(201).send(insertedRide[0])
     
     }
-
-    res.send("here is your response")
+        catch(error){
+            console.log("error in POST /rides", error);
+            res.status(500).send()
+        }
+   
 
 })
 
+app.get('/CustomerT/me', auth, (req,res)=>{
+    res.send(req.contact)
+})
 
 app.get("/hi",(req,res)=>{
 

@@ -16,20 +16,27 @@ const auth = async(req, res, next)=>{
         let decodedToken = jwt.verify(myToken, config.JWT)
         // console.log(decodedToken)
 
-        let contactPK = decodedToken.pk;
-        console.log(contactPK)
+        let CustomerPK = decodedToken.pk;
+        // console.log(CustomerPK)
 
         //2. compare token with database token
         let query = `
         SELECT CustomerPK, FirstName, LastName, Email
         FROM CustomerT
-        WHERE CustomerPK = ${contactPK} and Token = '${myToken}'`
+        WHERE CustomerPK = ${CustomerPK} and Token = '${myToken}'`
 
         let returnedUser = await db.executeQuery(query)
-        console.log(returnedUser)
-
-
+        // console.log(returnedUser)
         //3. save user information in the request
+
+        if (returnedUser[0]){
+            req.contact = returnedUser[0];
+            next()
+        }
+        else{res.status(401).send("Authentication failed.")}
+
+
+        
 
     }catch(myError){
         res.status(401).send("Authentication failed.")
