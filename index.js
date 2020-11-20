@@ -12,9 +12,43 @@ const app = express();
 app.use(express.json())
 app.use(cors())
 
+app.post('/CustomerT/logout', auth, (req,res)=>{
+    var thisQuery = `UPDATE CustomerT
+    SET Token = NULL
+    WHERE CustomerPK = ${req.contact.CustomerPK}
+    `
+
+    db.executeQuery(thisQuery)
+    .then(()=>{res.status(200).send()})
+    .catch((error)=>{
+        console.log("error in POST /CustomerT/logout", error)
+        res.status(500).send()
+    })
+       
+})
+
+// app.get('/RideT/me', auth, async(req,res)=>{
+//     let CustomerPK = req.contact.CustomerPK;
+
+// })
+
+// app.patch("/RideT/:pk", auth, async(req,res)=>{
+
+//     let RidePK = req.params.pk
+//     //Make sure that the user can only edit their past rides (probably not needed)
+// })
+
+// app.delete("/RideT/:pk", auth, async(req,res)=>{
+
+//     let RidePK = req.params.pk
+//     //Make sure that the user can only edit their past rides (probably not needed)
+// })
 
 
-app.post("/rides", auth, async (req,res)=>{
+app.get("/", (req,res)=>{res.send("Hello world.")})
+
+
+app.post("/RideT", auth, async (req,res)=>{
 
     try{ var DriverFK = req.body.DriverFK;
         var LocationTo = req.body.LocationTo;
