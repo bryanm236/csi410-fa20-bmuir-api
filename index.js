@@ -27,10 +27,29 @@ app.post('/CustomerT/logout', auth, (req,res)=>{
        
 })
 
-// app.get('/RideT/me', auth, async(req,res)=>{
-//     let CustomerPK = req.contact.CustomerPK;
+app.get('/RideT/me', auth, async(req,res)=>{
+    let CustomerPK = req.contact.CustomerPK;
 
-// })
+    var myQuery = `SELECT FirstName, LastName, LocationFrom, LocationTo
+    FROM RideT
+    LEFT JOIN CustomerT
+    ON CustomerT.CustomerPK = RideT.CustomerFK
+    WHERE CustomerPK = ${CustomerPK}`
+
+    db.executeQuery(myQuery)
+    .then((result)=>{
+
+        res.status(200).send(result)
+
+
+
+    })
+    .catch((err)=>{
+        console.log(err);
+        res.status(500).send()
+    })
+
+})
 
 // app.patch("/RideT/:pk", auth, async(req,res)=>{
 
